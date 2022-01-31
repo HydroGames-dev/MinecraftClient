@@ -33,8 +33,6 @@ const slash = "<:slash:856511320421302273>"
 const botdev = "<:botdev:856511739972550666>"
 const settings = "<:settings:856517667128999947>"
 
-const token = ""
-
 const activities = [
     "SMP",
     "Minecraft",
@@ -228,7 +226,7 @@ dsclient.on("message", async message => {
                         "• Guilds: " + dsclient.guilds.cache.size + "\n" +
                         "• Clients: " + connectedClient + "/20\n" +
                         "\n" +
-                        "• Library: discord.js v13\n" +
+                        "• Library: discord.js v13\n"
                     ).setColor("BLURPLE")],
                     allowedMentions: {repliedUser: false}
                 })
