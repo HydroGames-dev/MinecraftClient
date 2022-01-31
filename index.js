@@ -10,8 +10,8 @@ let clients = []
 let connectedClient = 0
 let debug = false
 
-const prefix = "*"
-const mcversion = "1.1.1"
+const prefix = "mc!"
+const mcversion = "1.1.2"
 
 const x = "<:brokiem_x:849486576727097384>"
 const e = "<:enter:849493018910261259>"
@@ -24,15 +24,15 @@ const botdev = "<:botdev:856511739972550666>"
 const settings = "<:settings:856517667128999947>"
 
 const activities = [
-    "*invite",
+    "SMP",
     "Minecraft",
-    "*help"
+    "m!help"
 ]
 
 const sup_versions = [
-    "1.17.10",
-    "1.17.0",
-    "1.16.220"
+    "1.18.2.03",
+    "1.18.0",
+    "1.17.0"
 ]
 
 dsclient.login().catch((e) => {
@@ -63,7 +63,7 @@ dsclient.on("message", async message => {
 
     try {
         if (message.content.includes(dsclient.user.id) && message.channel.type === "text" && !message.author.bot) {
-            message.channel.send({embeds: [makeEmbed(slash + " My prefix is * (Asterisk) | *help")]}).then(msg => {
+            message.channel.send({embeds: [makeEmbed(slash + " My prefix is m! | m!help")]}).then(msg => {
                 setTimeout(function () {
                     msg.delete()
                 }, 10000)
@@ -79,7 +79,7 @@ dsclient.on("message", async message => {
 
         switch (command) {
             case "debug":
-                if (message.author.id === "548120702373593090") {
+                if (message.author.id === "424826839047864320") {
                     debug = !debug
                     await message.reply("Debug successfully " + (debug ? "enabled" : "disabled"))
                 }
@@ -87,15 +87,14 @@ dsclient.on("message", async message => {
             case "help":
                 const helpEmbed1 = new discord.MessageEmbed()
                     .setColor("BLURPLE")
-                    .setTitle(slash + " Command List\n\n")
+                    .setTitle(slash + " Bot Command List\n\n")
                     .setThumbnail("https://cdn.discordapp.com/attachments/833621011097845830/856845502104076289/856511320421302273.png")
-                    .addField("*query <address> <port>", "Query a Minecraft server (java or bedrock)")
-                    .addField("*join <address> <port> <version>", "Join to Minecraft server (bedrock)")
-                    .addField("*chat <message>", "Send chat to connected server")
-                    .addField("*enablechat", "Enable server chat to discord channel")
-                    .addField("*form <button id>", "Send form resp to connected server")
-                    .addField("*disconnect", "Disconnect from connected server")
-                    .addField("*invite", "Get bot invite link")
+                    .addField("m!query <address> <port>", "Query a Minecraft server (java or bedrock)")
+                    .addField("m!join <address> <port> <version>", "Join to Minecraft server (bedrock)")
+                    .addField("m!chat <message>", "Send chat to connected server")
+                    .addField("m!enablechat", "Enable server chat to discord channel")
+                    .addField("m!form <button id>", "Send form resp to connected server")
+                    .addField("m!disconnect", "Disconnect from connected server")
 
                 await message.reply({embeds: [helpEmbed1], allowedMentions: {repliedUser: false}})
                 break
@@ -105,7 +104,7 @@ dsclient.on("message", async message => {
                     await ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1])
                 } else {
                     await message.reply({
-                        embeds: [makeEmbed(slash + " **Usage:** *query <address> <port>")],
+                        embeds: [makeEmbed(slash + " **Usage:** m!query <address> <port>")],
                         allowedMentions: {repliedUser: false}
                     })
                 }
@@ -124,7 +123,7 @@ dsclient.on("message", async message => {
                     connect(message, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "auto")
                 } else {
                     await message.reply({
-                        embeds: [makeEmbed(slash + " **Usage:** *connect <address> <port> <version>")],
+                        embeds: [makeEmbed(slash + " **Usage:** m!connect <address> <port> <version>")],
                         allowedMentions: {repliedUser: false}
                     })
                 }
@@ -142,13 +141,13 @@ dsclient.on("message", async message => {
                         }
                     } else {
                         await message.reply({
-                            embeds: [makeEmbed(slash + " **Usage:** *chat <message>")],
+                            embeds: [makeEmbed(slash + " **Usage:** m!chat <message>")],
                             allowedMentions: {repliedUser: false}
                         })
                     }
                 } else {
                     await message.reply({
-                        content: x + " I haven't connected to any server yet!",
+                        content: x + " I haven't joined to any server yet!",
                         allowedMentions: {repliedUser: false}
                     })
                 }
@@ -324,13 +323,13 @@ dsclient.on("interaction", async interaction => {
                 .setColor("BLURPLE")
                 .setTitle(slash + " Command List\n\n")
                 .setThumbnail("https://cdn.discordapp.com/attachments/833621011097845830/856845502104076289/856511320421302273.png")
-                .addField("*query <address> <port>", "Query a Minecraft server (java or bedrock)")
-                .addField("*join <address> <port> <version>", "Join to Minecraft server (bedrock)")
-                .addField("*chat <message>", "Send chat to connected server")
-                .addField("*enablechat", "Enable server chat to discord channel")
-                .addField("*form <button id>", "Send form resp to connected server")
-                .addField("*disconnect", "Disconnect from connected server")
-                .addField("*invite", "Get bot invite link")
+                .addField("m!query <address> <port>", "Query a Minecraft server (java or bedrock)")
+                .addField("m!join <address> <port> <version>", "Join to Minecraft server (bedrock)")
+                .addField("m!chat <message>", "Send chat to connected server")
+                .addField("m!enablechat", "Enable server chat to discord channel")
+                .addField("m!form <button id>", "Send form resp to connected server")
+                .addField("m!disconnect", "Disconnect from connected server")
+                .addField("m!invite", "Get bot invite link")
 
             interaction.reply({embeds: [helpEmbed1], allowedMentions: {repliedUser: false}})
         }
@@ -346,7 +345,7 @@ async function ping(channel, address, port = "19132") {
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 3000
     }).then((response) => {
-        channel.send({embeds: [makeEmbed("**Query information**\n\n**MOTD**: " + response.motdLine1.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers)]})
+        channel.send({embeds: [makeEmbed("**Server Query information**\n\n**MOTD**: " + response.motdLine1.descriptionText + "\n**Version**: " + response.version + "\n**Protocol**:" + response.version.protocol + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers + "\n**Map**:" + response.map)]})
     }).catch(() => {
         if (parseInt(port) === 19132) {
             pingJava(channel, address, 25565)
@@ -489,9 +488,9 @@ function connect(message, address, port, version = "auto") {
                     buttonId++
                 })
 
-                channel.send({embeds: [makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response")]})
+                channel.send({embeds: [makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( m!form <button id> ) to response")]})
             } else {
-                channel.send(x + ` I can't handle custom form yet, Use " *form null " to close the form`)
+                channel.send(x + ` I can't handle custom form yet, Use " m!form null " to close the form`)
             }
 
             if (debug) {
