@@ -6,12 +6,22 @@ const {Client} = require("bedrock-protocol")
 const query = require("minecraft-server-util")
 const os = require("os")
 
+const { Physics, PlayerState } = require('prismarine-physics')
+const { performance } = require('perf_hooks')
+const { d2r, r2d } = require('./util')
+const vec3 = require('vec3')
+
 let clients = []
 let connectedClient = 0
 let debug = false
 
 const prefix = "mc!"
 const mcversion = "1.1.2"
+
+// movements
+const PHYSICS_INTERVAL_MS = 50
+const PHYSICS_TIMESTEP = PHYSICS_INTERVAL_MS / 1000
+const AXES = ['forward', 'back', 'left', 'right']
 
 const x = "<:brokiem_x:849486576727097384>"
 const e = "<:enter:849493018910261259>"
@@ -22,6 +32,8 @@ const barrier = "<:barrier:849501525596438539>"
 const slash = "<:slash:856511320421302273>"
 const botdev = "<:botdev:856511739972550666>"
 const settings = "<:settings:856517667128999947>"
+
+const token = ""
 
 const activities = [
     "SMP",
@@ -40,7 +52,7 @@ dsclient.login().catch((e) => {
 })
 
 dsclient.on("ready", () => {
-    dsclient.user.setStatus("online")
+    dsclient.user.setStatus("idle")
 
     let i = 0
     setInterval(() => {
@@ -158,7 +170,7 @@ dsclient.on("message", async message => {
                     move(channel)
                 } else {
                     await message.reply({
-                        content: x + " I haven't connected to any server yet!",
+                        content: x + " I haven't joined to any server yet!",
                         allowedMentions: {repliedUser: false}
                     })
                 }
@@ -179,7 +191,7 @@ dsclient.on("message", async message => {
                     }
                 } else {
                     await message.reply({
-                        content: x + " I haven't connected to any server yet!",
+                        content: x + " I haven't joined to any server yet!",
                         allowedMentions: {repliedUser: false}
                     })
                 }
@@ -187,10 +199,10 @@ dsclient.on("message", async message => {
             case "enablechat":
                 if (isConnected(channel)) {
                     clients[channel]["enableChat"] = !clients[channel]["enableChat"]
-                    await channel.send(":ballot_box_with_check: Chat from server successfully " + (debug ? "enabled" : "disabled"))
+                    await channel.send(":ballot_box_with_check: Chat for server successfully " + (debug ? "enabled" : "disabled"))
                 } else {
                     await message.reply({
-                        content: x + " I haven't connected to any server yet!",
+                        content: x + " I haven't joined to any server yet!",
                         allowedMentions: {repliedUser: false}
                     })
                 }
@@ -203,13 +215,6 @@ dsclient.on("message", async message => {
             case "stats":
             case "status":
             case "uptime":
-                const invite = new discord.MessageButton().setStyle("LINK").setLabel("Invite")
-                    .setURL("https://discord.com/oauth2/authorize?client_id=" + dsclient.user.id + "&permissions=3072&scope=bot")
-                const vote = new discord.MessageButton().setStyle("LINK").setLabel("Vote")
-                    .setURL("https://top.gg/bot/844733770581803018/vote")
-
-                const row = new discord.MessageActionRow().addComponents(invite).addComponents(vote)
-
                 await message.reply({
                     components: [row],
                     embeds: [makeEmbed("" +
@@ -223,9 +228,7 @@ dsclient.on("message", async message => {
                         "• Guilds: " + dsclient.guilds.cache.size + "\n" +
                         "• Clients: " + connectedClient + "/20\n" +
                         "\n" +
-                        "• Developer: [brokiem](https://github.com/brokiem)\n" +
                         "• Library: discord.js v13\n" +
-                        "• Github: [MinecraftClient](https://github.com/brokiem/MinecraftClient)"
                     ).setColor("BLURPLE")],
                     allowedMentions: {repliedUser: false}
                 })
@@ -249,34 +252,34 @@ dsclient.on("message", async message => {
                 })
                 break
             case "servers":
-                if (message.author.id === "548120702373593090") {
+                if (message.author.id === "424826839047864320") {
                     await channel.send("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
                 }
                 break
             case "slash":
-                if (message.author.id === "548120702373593090") {
+                if (message.author.id === "424826839047864320") {
                     await (await dsclient.application.fetch()).commands.create({
                         name: "help",
-                        description: "Show help command",
+                        description: "Show the help command",
                     })
 
                     await message.reply({
-                        content: "Slash command created!",
+                        content: "Slash commands created!",
                         allowedMentions: {repliedUser: false}
                     })
                 }
                 break
             case "restart":
-                if (message.author.id === "548120702373593090") {
+                if (message.author.id === "424826839047864320") {
                     await message.reply({
-                        embeds: [makeEmbed(settings + " Restarting...")],
+                        embeds: [makeEmbed(settings + " Restarting Bot...")],
                         allowedMentions: {repliedUser: false}
                     })
                     process.exit(1)
                 }
                 break
             case "eval":
-                if (message.author.id === "548120702373593090") {
+                if (message.author.id === "424826839047864320") {
                     try {
                         const code = args.join(" ")
                         let evaled = eval(code)
@@ -345,7 +348,7 @@ async function ping(channel, address, port = "19132") {
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 3000
     }).then((response) => {
-        channel.send({embeds: [makeEmbed("**Server Query information**\n\n**MOTD**: " + response.motdLine1.descriptionText + "\n**Version**: " + response.version + "\n**Protocol**:" + response.version.protocol + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers + "\n**Map**:" + response.map)]})
+        channel.send({embeds: [makeEmbed("**Server Query information**\n\n**MOTD**: " + response.motdLine1.descriptionText + "\n**Version**: " + response.version + "\n**Protocol**: 475" + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers + "\n**Map**:" + response.map)]})
     }).catch(() => {
         if (parseInt(port) === 19132) {
             pingJava(channel, address, 25565)
@@ -357,9 +360,9 @@ async function pingJava(channel, address, port) {
     query.status(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
     }).then((response) => {
-        channel.send({embeds: [makeEmbed("**Query information**\n\n**MOTD**: " + response.description.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers)]})
+        channel.send({embeds: [makeEmbed("**Server Query information**\n\n**MOTD**: " + response.description.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers)]})
     }).catch((err) => {
-        channel.send({embeds: [makeEmbed("Query failed: " + err)]})
+        channel.send({embeds: [makeEmbed("Failed to fetch Server Query: " + err)]})
     })
 }
 
@@ -368,7 +371,7 @@ function connect(message, address, port, version = "auto") {
 
     if (isConnected(channel, false)) {
         message.reply({
-            content: x + " I've connected on this channel!",
+            content: x + " I'm bound to this channel!",
             allowedMentions: {repliedUser: false}
         })
         return
@@ -453,10 +456,10 @@ function connect(message, address, port, version = "auto") {
             switch (packet.status) {
                 case "failed_client":
                 case "failed_spawn":
-                    message = "Incompatible version"
+                    message = "Incompatible protocol version"
                     break
                 case "failed_server_full":
-                    message = "Server full!"
+                    message = "Server is full!"
                     break
             }
 
@@ -632,7 +635,7 @@ function move(channel) {
         return
     }
 
-    channel.send(reply + " Walking...")
+    channel.send(reply + " Walking in a random direction...")
 
     clients[channel]["walking"] = true
 
@@ -648,9 +651,9 @@ function move(channel) {
         clients[channel]["client"].queue("move_player", {
             runtime_id: clients[channel]["runtime_id"],
             position: {
-                x: clients[channel]["player_position"].x += 0.10000000000000,
+                x: clients[channel]["player_position"].x += 0.12000000000000,
                 y: clients[channel]["player_position"].y,
-                z: clients[channel]["player_position"].z += 0.10000000000000
+                z: clients[channel]["player_position"].z += 0.12000000000000
             },
             pitch: rand(0, 12),
             yaw: rand(0, 12),
@@ -706,7 +709,7 @@ function disconnect(message, showMessage = true) {
 
     if (!isConnected(channel, false)) {
         message.reply({
-            content: x + " I haven't connected to any server yet!\n",
+            content: x + " I haven't joined to any server yet to disconnect!\n",
             allowedMentions: {repliedUser: false}
         })
         return
