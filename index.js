@@ -15,6 +15,7 @@ let clients = []
 let connectedClient = 0
 let debug = false
 
+const token = ""
 const prefix = "mc!"
 const mcversion = "1.1.2"
 
